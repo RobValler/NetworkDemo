@@ -39,6 +39,11 @@ void CTestServer::Start() {
     udp_parms.ipAddress = "127.0.0.1";
     mUDPStack->Start(udp_parms);
 
+    // Start the TCPIP server
+    STCPIPServerParms tcpip_parms;
+    tcpip_parms.portID = 1234;
+    mTCPIPStack->Start(tcpip_parms);
+
     // start the threads
     mtDiscoverySend = std::thread(&CTestServer::DiscoverySend_ThreadFunc, this);
 }
@@ -78,12 +83,9 @@ void CTestServer::DiscoverySend_ThreadFunc() {
             continue;
         }
 
-        if(0 >= mUDPStack->Send(msg)){
+        if(0 >= mUDPStack->Send(msg)) {
 
-            std::cerr << "error: Send" << std::endl;
-        } else {
-
-            std::cout << "Sent: " << send_message.msgname() << std::endl;
+            std::cerr << "error: Send" << std::endl;            
         }
 
         std::this_thread::sleep_for(std::chrono::seconds(1));

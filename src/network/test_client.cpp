@@ -66,6 +66,7 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
             continue;
         }
 
+#if 0
         std::cout << "Client : received data from ("
                   << msg.mIpAddress
                   << ":"
@@ -74,6 +75,17 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
                   << rec_message.msgid()
                   << ", "
                   << rec_message.msgname() << std::endl;
+#endif
+
+        // call only once
+        if(!mIsConnectionRequested) {
+            STCPIPClientParms parms;
+            parms.ipAddress = msg.mIpAddress;
+            parms.portID = 1234;
+            parms.maxConnectRetryAttempts = 10;
+            mIsConnectionRequested = true;
+            mTCPIPStack->Start(parms);
+        }
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }

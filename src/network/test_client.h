@@ -29,4 +29,6 @@ private:
 
     std::unique_ptr<CUDP_Stack> mUDPStack;
     std::unique_ptr<CTCPIP_Client> mTCPIPStack;
+
+    bool mIsConnectionRequested{false};
 };
