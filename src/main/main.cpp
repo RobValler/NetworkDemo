@@ -10,28 +10,44 @@
 #include "test_server.h"
 #include "test_client.h"
 
-#ifdef _WIN32
-#include <conio.h>
-#endif
+// #ifdef _WIN32
+// #include <conio.h>
+// #endif
 #include <iostream>
 #include <thread>
 #include <chrono>
 
+#include <csignal>
+
+namespace
+{
+std::atomic<bool> gExitRequest{false};
+}
+
+void signal_handler(int signal)
+{
+    std::cout << "Terminate signal (" << std::to_string(signal) << ") recieved!" << std::endl;
+    gExitRequest = true;
+}
+
 int main(int argc, char *argv[]) {
+
+    // POSIIX signal handling
+    std::signal(SIGINT, signal_handler);   // CTRL+C
+    std::signal(SIGTERM, signal_handler);   // CTRL+Z
 
     std::cout << "Network Test"  << std::endl;;
     std::cout << "=======================" << std::endl;;
-
-    std::atomic<bool> ExitCalled = false;
 
     // ### SERVER ###
     auto threadServer = [&]() {
         CTestServer server;
 
         server.Start();
-        while(!ExitCalled) {
+        while(!gExitRequest) {
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            server.Send();
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
         server.Stop();
     };
@@ -41,24 +57,25 @@ int main(int argc, char *argv[]) {
         CTestClient client;
 
         client.Start();
-        while(!ExitCalled) {
+        while(!gExitRequest) {
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            client.Receive();
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
         client.Stop();
     };
 
     std::thread tServer(threadServer);
-    std::thread tClient(threadClient); // client is receiver, receiver creates the channel for MQ
+    std::thread tClient(threadClient);
 
     std::cout << "Press Enter to continue..."  << std::endl;;
 
-#ifdef __linux__
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
-#elif _WIN32
-    _getch();
-#endif
+// #ifdef __linux__
+//     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+//     std::cin.get();
+// #elif _WIN32
+//     _getch();
+// #endif
 
 //    ExitCalled = true;
     tClient.join();

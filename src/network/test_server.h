@@ -11,8 +11,10 @@
 #include <thread>
 #include <atomic>
 
+struct SPimplData;
 class CUDP_Stack;
 class CTCPIP_Server;
+class CSerial;
 
 class CTestServer {
 public:
@@ -29,6 +31,7 @@ private:
     std::thread mtDiscoverySend;
     std::atomic<bool> mShutdown{false};
 
-    std::unique_ptr<CUDP_Stack> mUDPStack;
-    std::unique_ptr<CTCPIP_Server> mTCPIPStack;
+    std::unique_ptr<CUDP_Stack> mpUDPStack;
+    std::unique_ptr<CTCPIP_Server> mpTCPIPStack;
+    std::unique_ptr<CSerial> mpSerialise;
 };

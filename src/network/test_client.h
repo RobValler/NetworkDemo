@@ -13,6 +13,7 @@
 
 class CUDP_Stack;
 class CTCPIP_Client;
+class CSerial;
 
 class CTestClient {
 public:
@@ -21,6 +22,8 @@ public:
 
     void Start();
     void Stop();
+    void Send();
+    void Receive();
 
 private:
     void DiscoveryRec_ThreadFunc();
@@ -29,6 +32,8 @@ private:
 
     std::unique_ptr<CUDP_Stack> mUDPStack;
     std::unique_ptr<CTCPIP_Client> mTCPIPStack;
+    std::unique_ptr<CSerial> mpSerialise;
+
 
     bool mIsConnectionRequested{false};
 };

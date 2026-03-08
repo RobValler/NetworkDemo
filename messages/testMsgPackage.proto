@@ -4,3 +4,18 @@ message TestMsgPackage {
   int32 MsgId = 1;
   string MsgName = 2;
 }
+
+message DiscoveryMsg {
+  int32 ID = 1;
+  string Type = 2;
+}
+
+message StatusMsg {
+  int32 ID = 1;
+  string Status = 2;
+}
+
+message CommandMsg {
+  int32 ID = 1;
+  string Command = 2;
+}

@@ -22,6 +22,7 @@
 CTestClient::CTestClient()
     : mUDPStack(std::make_unique<CUDP_Stack>())
     , mTCPIPStack(std::make_unique<CTCPIP_Client>())
+    , mpSerialise(std::make_unique<CSerial>())
 { /* do nothing */ }
 
 CTestClient::~CTestClient()
@@ -47,11 +48,53 @@ void CTestClient::Stop() {
     mtDiscoveryRec.join();
 }
 
+void CTestClient::Send() {
+
+    if(!mTCPIPStack->Connection()) {
+        return;
+    }
+
+    message::SMessage message;
+    StatusMsg status_msg;
+    status_msg.set_id(20);
+    status_msg.set_status("Status message - prepare for Information");
+
+    int size;
+    if(!mpSerialise->Serialise(status_msg, message.mMsgPayload, size)) {
+
+        std::cerr << "error: Serialise" << std::endl;
+        return;
+    }
+    mTCPIPStack->Send(message);
+    //std::cout << "Client send" << std::endl;
+}
+
+void CTestClient::Receive() {
+
+    if(!mTCPIPStack->Connection()) {
+        return;
+    }
+
+    message::SMessage message;
+    CommandMsg command_message;
+
+    if(0 >= mTCPIPStack->Receive(message)) {
+        std::cerr << "error: client receive" << std::endl;
+    }
+
+    int size = message.mMsgPayload.size();
+    if(!mpSerialise->Deserialise(message.mMsgPayload, command_message, size)) {
+        std::cerr << "error: Deserialise" << std::endl;
+    }
+
+    std::cout << "Client receive: " << command_message.command() << std::endl;
+}
+
 void CTestClient::DiscoveryRec_ThreadFunc() {
 
     message::SMessage msg;
     CSerial serialiser;
-    TestMsgPackage rec_message;
+    DiscoveryMsg rec_message;
 
     while(!mShutdown) {
 
