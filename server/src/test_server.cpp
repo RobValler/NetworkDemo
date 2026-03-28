@@ -21,8 +21,9 @@
 
 #include <chrono>
 
-CTestServer::CTestServer()
-    : mpUDPStack(std::make_unique<CUDP_Stack>())
+CTestServer::CTestServer(STestServerParms parms)
+    : mParms(parms)
+    , mpUDPStack(std::make_unique<CUDP_Stack>())
     , mpTCPIPStack(std::make_unique<CTCPIP_Server>())
     , mpSerialise(std::make_unique<CSerial>())
 { /* do nothing */ }
@@ -33,17 +34,18 @@ CTestServer::~CTestServer()
 void CTestServer::Start() {
 
     // Start the UDP
-    SUDPParms udp_parms;
-    udp_parms.broadCastSender = false;
-    udp_parms.portLocalID = 8001;
-    udp_parms.portRemoteID = 8002;
-    udp_parms.ipAddress = "127.0.0.1";
-    mpUDPStack->Start(udp_parms);
+    SUDPParms mUDPParms;
+    mUDPParms.name = mParms.name;
+    mUDPParms.broadCastSender = mParms.udp_broadCastSender;
+    mUDPParms.ipAddress = mParms.udp_ipAddress;
+    mUDPParms.portLocalID = mParms.udp_portLocalID;
+    mUDPParms.portRemoteID = mParms.udp_portRemoteID;
+    mpUDPStack->Start(mUDPParms);
 
     // Start the TCPIP server
-    STCPIPServerParms tcpip_parms;
-    tcpip_parms.portID = 1234;
-    mpTCPIPStack->Start(tcpip_parms);
+    STCPIPServerParms mTCPIPParms;
+    mTCPIPParms.portID = mParms.tcp_portID;
+    mpTCPIPStack->Start(mTCPIPParms);
 
     // start the threads
     mtDiscoverySend = std::thread(&CTestServer::DiscoverySend_ThreadFunc, this);
@@ -87,6 +89,8 @@ void CTestServer::Receive() {
     message::SMessage message;
     if(0 >= mpTCPIPStack->Receive(message)) {
         std::cerr << "error: server receive" << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        return;
     }
 
     int size = message.mMsgPayload.size();

@@ -11,7 +11,7 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeDeps, CMakeToolchain, cmake_layout
 
 class CommsStackRecipe(ConanFile):
-    name = "net_stack"
+    name = "network_demo"
     version = "1.0.0"
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps", "CMakeToolchain"

@@ -19,9 +19,10 @@
 #include "serialise.h"
 
 
-CTestClient::CTestClient()
-    : mUDPStack(std::make_unique<CUDP_Stack>())
-    , mTCPIPStack(std::make_unique<CTCPIP_Client>())
+CTestClient::CTestClient(STestClientParms parms)
+    : mParms(parms)
+    , mpUDPStack(std::make_unique<CUDP_Stack>())
+    , mpTCPIPStack(std::make_unique<CTCPIP_Client>())
     , mpSerialise(std::make_unique<CSerial>())
 { /* do nothing */ }
 
@@ -30,13 +31,23 @@ CTestClient::~CTestClient()
 
 void CTestClient::Start(){
 
+
     // Start the UDP
-    SUDPParms udp_parms;
-    udp_parms.broadCastSender = false;
-    udp_parms.portLocalID = 8002;
-    udp_parms.portRemoteID = 8001;
-    udp_parms.ipAddress = "127.0.0.1";
-    mUDPStack->Start(udp_parms);
+    SUDPParms mUDPParms;
+    mUDPParms.name = mParms.name;
+    mUDPParms.broadCastSender = false;
+    mUDPParms.ipAddress = mParms.udp_ipAddress;
+    mUDPParms.portLocalID = mParms.udp_portLocalID;
+    mUDPParms.portRemoteID = mParms.udp_portRemoteID;
+    mpUDPStack->Start(mUDPParms);
+
+    // Start the TCPIP server
+    STCPIPClientParms mTCPIPParms;
+    mTCPIPParms.name = mParms.name;
+    mTCPIPParms.ipAddress = mParms.tcp_ipAddress;
+    mTCPIPParms.portIDLocal = mParms.tcp_portID;
+    mTCPIPParms.maxConnectRetryAttempts = mParms.tcp_maxConnectRetryAttempts;
+    mpTCPIPStack->Start(mTCPIPParms);
 
     // start the threads
     mtDiscoveryRec = std::thread(&CTestClient::DiscoveryRec_ThreadFunc, this);
@@ -50,7 +61,7 @@ void CTestClient::Stop() {
 
 void CTestClient::Send() {
 
-    if(!mTCPIPStack->Connection()) {
+    if(!mpTCPIPStack->Connection()) {
         return;
     }
 
@@ -65,20 +76,20 @@ void CTestClient::Send() {
         std::cerr << "error: Serialise" << std::endl;
         return;
     }
-    mTCPIPStack->Send(message);
+    mpTCPIPStack->Send(message);
     //std::cout << "Client send" << std::endl;
 }
 
 void CTestClient::Receive() {
 
-    if(!mTCPIPStack->Connection()) {
+    if(!mpTCPIPStack->Connection()) {
         return;
     }
 
     message::SMessage message;
     CommandMsg command_message;
 
-    if(0 >= mTCPIPStack->Receive(message)) {
+    if(0 >= mpTCPIPStack->Receive(message)) {
         std::cerr << "error: client receive" << std::endl;
     }
 
@@ -98,8 +109,9 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
 
     while(!mShutdown) {
 
-        if(0 >= mUDPStack->Receive(msg)) {
+        if(0 >= mpUDPStack->Receive(msg)) {
             std::cerr << "error: Receive" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
             continue;
         }
 
@@ -109,25 +121,10 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
             continue;
         }
 
-#if 0
-        std::cout << "Client : received data from ("
-                  << msg.mIpAddress
-                  << ":"
-                  << std::to_string(msg.mPort)
-                  << ") - "
-                  << rec_message.msgid()
-                  << ", "
-                  << rec_message.msgname() << std::endl;
-#endif
-
         // call only once
         if(!mIsConnectionRequested) {
-            STCPIPClientParms parms;
-            parms.ipAddress = msg.mIpAddress;
-            parms.portID = 1234;
-            parms.maxConnectRetryAttempts = 10;
-            mIsConnectionRequested = true;
-            mTCPIPStack->Start(parms);
+
+            //mpTCPIPStack->Start(mParms);
         }
 
         std::this_thread::sleep_for(std::chrono::seconds(1));

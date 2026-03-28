@@ -2,7 +2,7 @@
 #protoc --cpp_out=. *.proto
 
 #rm *.pb.cc
-#rm *.pb.h
+rm ./src/*
 
 # update build folder appropriately
-~/.conan2/p/b/protofc2018eefb4dd/p/bin/protoc --cpp_out=. *.proto
+~/.conan2/p/b/protofc2018eefb4dd/p/bin/protoc --cpp_out=./src *.proto
