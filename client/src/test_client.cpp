@@ -144,7 +144,21 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
                   << ", "
                   << rec_message.msgname() << std::endl;
 
-        std::string tcpipServerIP = msg.mIpAddress;
+        std::string loclal_tcpip_server_IP = msg.mIpAddress;
+
+        // connect to the tcpip server
+        if(mTCPIPServerIP != loclal_tcpip_server_IP) {
+
+            STCPIPClientParms parms;
+            parms.portID = 2001;
+            parms.ipAddress = loclal_tcpip_server_IP;
+            parms.maxConnectRetryAttempts = 10;
+            if(1 == mpTCPIPStack->Start(parms)) {
+                std::cerr << "error: tcpip_client start failed" << std::endl;
+            }
+
+            mTCPIPServerIP = loclal_tcpip_server_IP;
+        }
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }

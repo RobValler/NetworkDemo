@@ -57,4 +57,6 @@ private:
 
     STestClientParms mParms;
 
+    std::string mTCPIPServerIP{""};
+
 };
