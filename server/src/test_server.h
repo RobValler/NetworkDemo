@@ -13,29 +13,13 @@
 #include <thread>
 #include <atomic>
 
-struct STestServerParms {
-    // general
-    std::string name;
-
-    // udp
-    bool udp_broadCastSender{false};
-    int udp_portLocalID{0};
-    int udp_portRemoteID{0};
-    std::string  udp_ipAddress{""};
-
-    // tcpip
-    int tcp_portID{0};
-    std::string tcp_ipAddress;
-    //int tcp_maxConnectRetryAttempts;
-};
-
 class CUDP_Stack;
 class CTCPIP_Server;
 class CSerial;
 
 class CTestServer {
 public:
-    CTestServer(STestServerParms parms);
+    CTestServer();
     ~CTestServer();
 
     void Start();
@@ -51,7 +35,5 @@ private:
     std::unique_ptr<CUDP_Stack> mpUDPStack;
     std::unique_ptr<CTCPIP_Server> mpTCPIPStack;
     std::unique_ptr<CSerial> mpSerialise;
-
-    STestServerParms mParms;
 
 };

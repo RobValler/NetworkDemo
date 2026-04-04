@@ -31,18 +31,7 @@ int main(int argc, char *argv[]) {
     std::signal(SIGINT, signal_handler);    // CTRL+C
     std::signal(SIGTERM, signal_handler);   // CTRL+Z
 
-    // Server
-    STestServerParms parms;
-    parms.name = "server";
-    parms.tcp_portID = 2001;
-    parms.tcp_ipAddress = "192.168.10.11";
-    parms.udp_broadCastSender = true;
-    parms.udp_portLocalID = 3001;
-    parms.udp_portRemoteID = 3002;
-    parms.udp_broadCastSender = true;
-    parms.udp_ipAddress = "192.168.10.255";
-
-    CTestServer server(parms);
+    CTestServer server;
     server.Start();
     while(!gExitRequest) {
 

@@ -13,29 +13,13 @@
 #include <thread>
 #include <atomic>
 
-struct STestClientParms {
-    // general
-    std::string name;
-
-    // udp
-    int udp_portLocalID{0};
-    int udp_portRemoteID{0};
-    std::string  udp_ipAddress{""};
-
-    // tcpip
-    int tcp_portID{0};
-    std::string tcp_ipAddress;
-    int tcp_maxConnectRetryAttempts;
-};
-
 class CUDP_Stack;
 class CTCPIP_Client;
 class CSerial;
 
-
 class CTestClient {
 public:
-    CTestClient(STestClientParms parms);
+    CTestClient();
     ~CTestClient();
 
     void Start();
@@ -52,11 +36,7 @@ private:
     std::unique_ptr<CTCPIP_Client> mpTCPIPStack;
     std::unique_ptr<CSerial> mpSerialise;
 
-
     bool mIsConnectionRequested{false};
-
-    STestClientParms mParms;
-
     std::string mTCPIPServerIP{""};
 
 };

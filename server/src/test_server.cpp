@@ -22,9 +22,8 @@
 #include <chrono>
 #include <iostream>
 
-CTestServer::CTestServer(STestServerParms parms)
-    : mParms(parms)
-    , mpUDPStack(std::make_unique<CUDP_Stack>())
+CTestServer::CTestServer()
+    : mpUDPStack(std::make_unique<CUDP_Stack>())
     , mpTCPIPStack(std::make_unique<CTCPIP_Server>())
     , mpSerialise(std::make_unique<CSerial>())
 { /* do nothing */ }
@@ -92,9 +91,9 @@ void CTestServer::DiscoverySend_ThreadFunc() {
 
     // ### SERVER ###
     CSerial serialise;
-    TestMsgPackage send_message;
-    send_message.set_msgid(10);
-    send_message.set_msgname("Discovery request");
+    DiscoveryMsg send_message;
+    send_message.set_id(10);
+    send_message.set_type("Discovery request");
     message::SMessage msg;
 
     // Start the UDP

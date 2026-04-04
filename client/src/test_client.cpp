@@ -19,9 +19,8 @@
 #include "serialise.h"
 
 
-CTestClient::CTestClient(STestClientParms parms)
-    : mParms(parms)
-    , mpUDPStack(std::make_unique<CUDP_Stack>())
+CTestClient::CTestClient()
+    : mpUDPStack(std::make_unique<CUDP_Stack>())
     , mpTCPIPStack(std::make_unique<CTCPIP_Client>())
     , mpSerialise(std::make_unique<CSerial>())
 { /* do nothing */ }
@@ -30,23 +29,6 @@ CTestClient::~CTestClient()
 { /* do nothing */ }
 
 void CTestClient::Start(){
-
-
-    // Start the UDP
-    // SUDPParms udp_parms;
-    // udp_parms.broadCastSender = false;
-    // udp_parms.portLocalID = 8002;
-    // udp_parms.portRemoteID = 8001;
-    // udp_parms.localIpAddress = "192.168.100.12";
-    // //udp_parms.remoteIpAddress = "192.168.100.255";
-    // auto result = mpUDPStack->Start(udp_parms);
-
-    // // Start the TCPIP server
-    // STCPIPClientParms mTCPIPParms;
-    // mTCPIPParms.ipAddress = mParms.tcp_ipAddress;
-    // mTCPIPParms.portID = mParms.tcp_portID;
-    // mTCPIPParms.maxConnectRetryAttempts = mParms.tcp_maxConnectRetryAttempts;
-    // mpTCPIPStack->Start(mTCPIPParms);
 
     // start the threads
     mtDiscoveryRec = std::thread(&CTestClient::DiscoveryRec_ThreadFunc, this);
@@ -108,7 +90,7 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
 
     message::SMessage msg;
     CSerial serialiser;
-    TestMsgPackage rec_message;
+    DiscoveryMsg rec_message;
 
     // Start the UDP
     SUDPParms udp_parms;
@@ -134,30 +116,35 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             continue;
         }
-
+#if 0
         std::cout << "Client : received data from ("
                   << msg.mIpAddress
                   << ":"
                   << std::to_string(msg.mPort)
                   << ") - "
-                  << rec_message.msgid()
+                  << rec_message.id()
                   << ", "
-                  << rec_message.msgname() << std::endl;
+                  << rec_message.type() << std::endl;
+#endif
+        // 10 is the discovery ID
+        if(10 == rec_message.id()) {
 
-        std::string loclal_tcpip_server_IP = msg.mIpAddress;
+            std::string loclal_tcpip_server_IP = msg.mIpAddress;
 
-        // connect to the tcpip server
-        if(mTCPIPServerIP != loclal_tcpip_server_IP) {
+            // connect to the tcpip server
+            if(mTCPIPServerIP != loclal_tcpip_server_IP) {
 
-            STCPIPClientParms parms;
-            parms.portID = 2001;
-            parms.ipAddress = loclal_tcpip_server_IP;
-            parms.maxConnectRetryAttempts = 10;
-            if(1 == mpTCPIPStack->Start(parms)) {
-                std::cerr << "error: tcpip_client start failed" << std::endl;
+                STCPIPClientParms tcpip_parms;
+                tcpip_parms.portID = 2001;
+                tcpip_parms.remoteIpAddress = loclal_tcpip_server_IP;
+                tcpip_parms.localIpAddress = "192.168.100.12";
+                tcpip_parms.maxConnectRetryAttempts = 10;
+                if(1 == mpTCPIPStack->Start(tcpip_parms)) {
+                    std::cerr << "error: tcpip_client start failed" << std::endl;
+                }
+
+                mTCPIPServerIP = loclal_tcpip_server_IP;
             }
-
-            mTCPIPServerIP = loclal_tcpip_server_IP;
         }
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
