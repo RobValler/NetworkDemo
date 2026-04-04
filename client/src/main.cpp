@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     std::signal(SIGTERM, signal_handler);   // CTRL+Z
 
     STestClientParms parms;
-    parms.name = "server";
+    parms.name = "client 1";
     parms.tcp_portID = 2001;
     parms.tcp_ipAddress = "192.168.10.12";
     parms.udp_portLocalID = 3002;
@@ -41,10 +41,12 @@ int main(int argc, char *argv[]) {
     parms.udp_ipAddress = "192.168.10.12";
     parms.tcp_maxConnectRetryAttempts = 10;
 
+
     CTestClient client(parms);
     client.Start();
     while(!gExitRequest) {
 
+        client.Receive();
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     client.Stop();

@@ -7,7 +7,7 @@
 # without the express permission of the copyright holder
 #****************************************************************/
 cmake_minimum_required(VERSION 3.5.0)
-project (network_demo_client)
+project (client_demo)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 set (CMAKE_CXX_STANDARD 20)
 set (Wall)
@@ -20,9 +20,9 @@ find_package(protobuf 6.32.1 REQUIRED)
 
 #EXTERNAL INCLUDES
 include_directories(${ProtobufIncludePath})
-include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/common)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/serialise)
+include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network/udp)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network/tcpip)
 

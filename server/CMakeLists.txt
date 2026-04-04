@@ -7,7 +7,7 @@
 # without the express permission of the copyright holder
 #****************************************************************/
 cmake_minimum_required(VERSION 3.5.0)
-project (network_demo_server)
+project (server_demo)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 set (CMAKE_CXX_STANDARD 20)
 set (Wall)

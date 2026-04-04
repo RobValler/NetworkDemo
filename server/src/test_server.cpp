@@ -20,6 +20,7 @@
 #include "serialise.h"
 
 #include <chrono>
+#include <iostream>
 
 CTestServer::CTestServer(STestServerParms parms)
     : mParms(parms)
@@ -34,18 +35,18 @@ CTestServer::~CTestServer()
 void CTestServer::Start() {
 
     // Start the UDP
-    SUDPParms mUDPParms;
-    mUDPParms.name = mParms.name;
-    mUDPParms.broadCastSender = mParms.udp_broadCastSender;
-    mUDPParms.ipAddress = mParms.udp_ipAddress;
-    mUDPParms.portLocalID = mParms.udp_portLocalID;
-    mUDPParms.portRemoteID = mParms.udp_portRemoteID;
-    mpUDPStack->Start(mUDPParms);
+    // SUDPParms udp_parms;
+    // udp_parms.portLocalID = 8001;
+    // udp_parms.portRemoteID = 8002;
+    // udp_parms.broadCastSender = false;
+    // //udp_parms.localIpAddress = "192.168.100.11";
+    // udp_parms.remoteIpAddress = "192.168.100.12";
+    // mpUDPStack->Start(udp_parms);
 
-    // Start the TCPIP server
-    STCPIPServerParms mTCPIPParms;
-    mTCPIPParms.portID = mParms.tcp_portID;
-    mpTCPIPStack->Start(mTCPIPParms);
+    // // Start the TCPIP server
+    // STCPIPServParms parms;
+    // parms.portID = 2001;
+    // mpTCPIPStack->Start(parms);
 
     // start the threads
     mtDiscoverySend = std::thread(&CTestServer::DiscoverySend_ThreadFunc, this);
@@ -103,27 +104,45 @@ void CTestServer::Receive() {
 
 void CTestServer::DiscoverySend_ThreadFunc() {
 
-    CSerial serialise;
-    DiscoveryMsg discovery_message;
-    discovery_message.set_id(10);
-    discovery_message.set_type("Discovery request");
-    message::SMessage message;
+    // ### SERVER ###
 
-    while(!mShutdown) {
 
-        int size;
-        if(!serialise.Serialise(discovery_message, message.mMsgPayload, size)) {
+        //  udpCUDP_Stack_stack;
+        CSerial serialise;
+        TestMsgPackage send_message;
+        send_message.set_msgid(10);
+        send_message.set_msgname("Discovery request");
+        message::SMessage msg;
 
-            std::cerr << "error: Serialise" << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(250));
-            continue;
+        // Start the UDP
+        SUDPParms udp_parms;
+        udp_parms.portLocalID = 8001;
+        udp_parms.portRemoteID = 8002;
+        udp_parms.broadCastSender = false;
+        udp_parms.localIpAddress = "192.168.100.11";
+        udp_parms.remoteIpAddress = "192.168.100.12";
+        mpUDPStack->Start(udp_parms);
+
+        while(!mShutdown) {
+
+            int size;
+            if(!serialise.Serialise(send_message, msg.mMsgPayload, size)) {
+
+                std::cerr << "error: Serialise" << std::endl;
+                std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                continue;
+            }
+
+            if(0 < mpUDPStack->Send(msg)) {
+
+                std::cout << "[UDP] Sent OK" << std::endl;
+            } else {
+
+                std::cerr << "error: Send" << std::endl;
+            }
+
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
+        mpUDPStack->Stop();
 
-        if(0 >= mpUDPStack->Send(message)) {
-
-            std::cerr << "error: Send" << std::endl;
-        }
-
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
 }

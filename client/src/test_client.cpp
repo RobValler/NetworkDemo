@@ -33,21 +33,20 @@ void CTestClient::Start(){
 
 
     // Start the UDP
-    SUDPParms mUDPParms;
-    mUDPParms.name = mParms.name;
-    mUDPParms.broadCastSender = false;
-    mUDPParms.ipAddress = mParms.udp_ipAddress;
-    mUDPParms.portLocalID = mParms.udp_portLocalID;
-    mUDPParms.portRemoteID = mParms.udp_portRemoteID;
-    mpUDPStack->Start(mUDPParms);
+    // SUDPParms udp_parms;
+    // udp_parms.broadCastSender = false;
+    // udp_parms.portLocalID = 8002;
+    // udp_parms.portRemoteID = 8001;
+    // udp_parms.localIpAddress = "192.168.100.12";
+    // //udp_parms.remoteIpAddress = "192.168.100.255";
+    // auto result = mpUDPStack->Start(udp_parms);
 
-    // Start the TCPIP server
-    STCPIPClientParms mTCPIPParms;
-    mTCPIPParms.name = mParms.name;
-    mTCPIPParms.ipAddress = mParms.tcp_ipAddress;
-    mTCPIPParms.portIDLocal = mParms.tcp_portID;
-    mTCPIPParms.maxConnectRetryAttempts = mParms.tcp_maxConnectRetryAttempts;
-    mpTCPIPStack->Start(mTCPIPParms);
+    // // Start the TCPIP server
+    // STCPIPClientParms mTCPIPParms;
+    // mTCPIPParms.ipAddress = mParms.tcp_ipAddress;
+    // mTCPIPParms.portID = mParms.tcp_portID;
+    // mTCPIPParms.maxConnectRetryAttempts = mParms.tcp_maxConnectRetryAttempts;
+    // mpTCPIPStack->Start(mTCPIPParms);
 
     // start the threads
     mtDiscoveryRec = std::thread(&CTestClient::DiscoveryRec_ThreadFunc, this);
@@ -61,7 +60,7 @@ void CTestClient::Stop() {
 
 void CTestClient::Send() {
 
-    if(!mpTCPIPStack->Connection()) {
+    if(!mpTCPIPStack->Connections()) {
         return;
     }
 
@@ -82,7 +81,7 @@ void CTestClient::Send() {
 
 void CTestClient::Receive() {
 
-    if(!mpTCPIPStack->Connection()) {
+    if(!mpTCPIPStack->Connections()) {
         return;
     }
 
@@ -91,11 +90,15 @@ void CTestClient::Receive() {
 
     if(0 >= mpTCPIPStack->Receive(message)) {
         std::cerr << "error: client receive" << std::endl;
+        return;
     }
+
+    std::cout << "Received" << std::endl;
 
     int size = message.mMsgPayload.size();
     if(!mpSerialise->Deserialise(message.mMsgPayload, command_message, size)) {
         std::cerr << "error: Deserialise" << std::endl;
+        return;
     }
 
     std::cout << "Client receive: " << command_message.command() << std::endl;
@@ -105,7 +108,16 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
 
     message::SMessage msg;
     CSerial serialiser;
-    DiscoveryMsg rec_message;
+    TestMsgPackage rec_message;
+
+    // Start the UDP
+    SUDPParms udp_parms;
+    udp_parms.broadCastSender = false;
+    udp_parms.portLocalID = 8002;
+    udp_parms.portRemoteID = 8001;
+    udp_parms.localIpAddress = "192.168.100.12";
+    //udp_parms.remoteIpAddress = "192.168.100.255";
+    mpUDPStack->Start(udp_parms);
 
     while(!mShutdown) {
 
@@ -117,16 +129,24 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
 
         int size = msg.mMsgPayload.size();
         if(!serialiser.Deserialise(msg.mMsgPayload, rec_message, size)) {
+
             std::cerr << "error: Deserialise" << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             continue;
         }
 
-        // call only once
-        if(!mIsConnectionRequested) {
+        std::cout << "Client : received data from ("
+                  << msg.mIpAddress
+                  << ":"
+                  << std::to_string(msg.mPort)
+                  << ") - "
+                  << rec_message.msgid()
+                  << ", "
+                  << rec_message.msgname() << std::endl;
 
-            //mpTCPIPStack->Start(mParms);
-        }
+        std::string tcpipServerIP = msg.mIpAddress;
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+    mpUDPStack->Stop();
 }

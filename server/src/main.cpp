@@ -39,12 +39,12 @@ int main(int argc, char *argv[]) {
     parms.udp_broadCastSender = true;
     parms.udp_portLocalID = 3001;
     parms.udp_portRemoteID = 3002;
-    parms.udp_ipAddress = "192.168.10.11";
+    parms.udp_broadCastSender = true;
+    parms.udp_ipAddress = "192.168.10.255";
 
     CTestServer server(parms);
     server.Start();
     while(!gExitRequest) {
-
 
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
