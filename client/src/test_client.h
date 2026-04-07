@@ -19,7 +19,7 @@ class CSerial;
 
 class CTestClient {
 public:
-    CTestClient();
+    CTestClient(int argc, char *argv[]);
     ~CTestClient();
 
     void Start();
@@ -28,15 +28,20 @@ public:
     void Receive();
 
 private:
-    void DiscoveryRec_ThreadFunc();
-    std::thread mtDiscoveryRec;
+    void Discovery_ThreadFunc();
+    std::thread mtDiscovery;
+    void Operational_ThreadFunc();
+    std::thread mtOperational;
     std::atomic<bool> mShutdown{false};
 
     std::unique_ptr<CUDP_Stack> mpUDPStack;
     std::unique_ptr<CTCPIP_Client> mpTCPIPStack;
     std::unique_ptr<CSerial> mpSerialise;
 
-    bool mIsConnectionRequested{false};
+    bool mConnected{false};
     std::string mTCPIPServerIP{""};
+    std::string mTCPIPLocalIP{""};
 
+    int mArgc;
+    char **mArgv;
 };

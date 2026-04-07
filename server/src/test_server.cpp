@@ -9,7 +9,6 @@
 
 #include "test_server.h"
 
-
 // protocol
 #include "udp_stack.h"
 #include "tcpip_server.h"
@@ -18,6 +17,7 @@
 #include "message_define.h"
 #include "testMsgPackage.pb.h"
 #include "serialise.h"
+//#include "encrypt.h"
 
 #include <chrono>
 #include <iostream>
@@ -34,13 +34,15 @@ CTestServer::~CTestServer()
 void CTestServer::Start() {
 
     // start the threads
-    mtDiscoverySend = std::thread(&CTestServer::DiscoverySend_ThreadFunc, this);
+    mtDiscovery = std::thread(&CTestServer::Discovery_ThreadFunc, this);
+    mtOperational = std::thread(&CTestServer::Operational_ThreadFunc, this);
 }
 
 void CTestServer::Stop() {
 
     mShutdown = true;
-    mtDiscoverySend.join();
+    mtDiscovery.join();
+    mtOperational.join();
 }
 
 void CTestServer::Send() {
@@ -87,7 +89,7 @@ void CTestServer::Receive() {
     std::cout << "Server receive: " << status_msg.status() << std::endl;
 }
 
-void CTestServer::DiscoverySend_ThreadFunc() {
+void CTestServer::Discovery_ThreadFunc() {
 
     // ### SERVER ###
     CSerial serialise;
@@ -100,9 +102,9 @@ void CTestServer::DiscoverySend_ThreadFunc() {
     SUDPParms udp_parms;
     udp_parms.portLocalID = 8001;
     udp_parms.portRemoteID = 8002;
-    udp_parms.broadCastSender = false;
+    udp_parms.broadCastSender = true;
     udp_parms.localIpAddress = "192.168.100.11";
-    udp_parms.remoteIpAddress = "192.168.100.12";
+    udp_parms.remoteIpAddress = "192.168.100.255";
     mpUDPStack->Start(udp_parms);
 
     // // Start the TCPIP server
@@ -129,8 +131,41 @@ void CTestServer::DiscoverySend_ThreadFunc() {
             std::cerr << "error: Send" << std::endl;
         }
 
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::seconds(2));
     }
     mpUDPStack->Stop();
 
+}
+
+void CTestServer::Operational_ThreadFunc() {
+
+    message::SMessage message;
+    StatusMsg status_msg;
+
+    while(!mShutdown) {
+
+        if(!mpTCPIPStack->Connections()) {
+
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            continue;
+        }
+
+        auto bytes_rec = mpTCPIPStack->Receive(message);
+        if(bytes_rec > 0) {
+
+            int size = message.mMsgPayload.size();
+            if(mpSerialise->Deserialise(message.mMsgPayload, status_msg, size)) {
+
+                switch(status_msg.id()) {
+                    case 15: {
+                        std::cout << "[Server] " << status_msg.status() << std::endl;
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
 }

@@ -28,8 +28,10 @@ public:
     void Receive();
 
 private:
-    void DiscoverySend_ThreadFunc();
-    std::thread mtDiscoverySend;
+    void Discovery_ThreadFunc();
+    std::thread mtDiscovery;
+    void Operational_ThreadFunc();
+    std::thread mtOperational;
     std::atomic<bool> mShutdown{false};
 
     std::unique_ptr<CUDP_Stack> mpUDPStack;

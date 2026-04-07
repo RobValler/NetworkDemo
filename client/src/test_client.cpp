@@ -19,30 +19,42 @@
 #include "serialise.h"
 
 
-CTestClient::CTestClient()
-    : mpUDPStack(std::make_unique<CUDP_Stack>())
+namespace {
+    const std::string gLocalIPAddress{"192.168.100.14"};
+}
+
+CTestClient::CTestClient(int argc, char *argv[])
+    : mArgc(argc)
+    , mArgv(argv)
+    , mpUDPStack(std::make_unique<CUDP_Stack>())
     , mpTCPIPStack(std::make_unique<CTCPIP_Client>())
     , mpSerialise(std::make_unique<CSerial>())
-{ /* do nothing */ }
+{
+    if(mArgc > 1) {
+        mTCPIPLocalIP = argv[1];
+    }
+}
 
 CTestClient::~CTestClient()
 { /* do nothing */ }
 
-void CTestClient::Start(){
+void CTestClient::Start() {
 
     // start the threads
-    mtDiscoveryRec = std::thread(&CTestClient::DiscoveryRec_ThreadFunc, this);
+    mtDiscovery = std::thread(&CTestClient::Discovery_ThreadFunc, this);
+    mtOperational = std::thread(&CTestClient::Operational_ThreadFunc, this);
 }
 
 void CTestClient::Stop() {
 
     mShutdown = true;
-    mtDiscoveryRec.join();
+    mtDiscovery.join();
+    mtOperational.join();
 }
 
 void CTestClient::Send() {
 
-    if(!mpTCPIPStack->Connections()) {
+    if(!mpTCPIPStack->Connection()) {
         return;
     }
 
@@ -63,7 +75,7 @@ void CTestClient::Send() {
 
 void CTestClient::Receive() {
 
-    if(!mpTCPIPStack->Connections()) {
+    if(!mpTCPIPStack->Connection()) {
         return;
     }
 
@@ -86,7 +98,7 @@ void CTestClient::Receive() {
     std::cout << "Client receive: " << command_message.command() << std::endl;
 }
 
-void CTestClient::DiscoveryRec_ThreadFunc() {
+void CTestClient::Discovery_ThreadFunc() {
 
     message::SMessage msg;
     CSerial serialiser;
@@ -94,11 +106,10 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
 
     // Start the UDP
     SUDPParms udp_parms;
-    udp_parms.broadCastSender = false;
     udp_parms.portLocalID = 8002;
     udp_parms.portRemoteID = 8001;
-    udp_parms.localIpAddress = "192.168.100.12";
-    //udp_parms.remoteIpAddress = "192.168.100.255";
+    //udp_parms.localIpAddress = "192.168.100.15";
+    //udp_parms.remoteIpAddress = "192.168.100.14";
     mpUDPStack->Start(udp_parms);
 
     while(!mShutdown) {
@@ -129,21 +140,22 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
         // 10 is the discovery ID
         if(10 == rec_message.id()) {
 
-            std::string loclal_tcpip_server_IP = msg.mIpAddress;
+            std::string local_tcpip_server_IP = msg.mIpAddress;
 
             // connect to the tcpip server
-            if(mTCPIPServerIP != loclal_tcpip_server_IP) {
+            if(mTCPIPServerIP != local_tcpip_server_IP) {
 
                 STCPIPClientParms tcpip_parms;
                 tcpip_parms.portID = 2001;
-                tcpip_parms.remoteIpAddress = loclal_tcpip_server_IP;
-                tcpip_parms.localIpAddress = "192.168.100.12";
+                tcpip_parms.remoteIpAddress = local_tcpip_server_IP;
+                tcpip_parms.localIpAddress = mTCPIPLocalIP;
                 tcpip_parms.maxConnectRetryAttempts = 10;
                 if(1 == mpTCPIPStack->Start(tcpip_parms)) {
                     std::cerr << "error: tcpip_client start failed" << std::endl;
                 }
 
-                mTCPIPServerIP = loclal_tcpip_server_IP;
+                mTCPIPServerIP = local_tcpip_server_IP;
+                mConnected = true;
             }
         }
 
@@ -151,3 +163,32 @@ void CTestClient::DiscoveryRec_ThreadFunc() {
     }
     mpUDPStack->Stop();
 }
+
+void CTestClient::Operational_ThreadFunc() {
+
+    message::SMessage message;
+    StatusMsg status_msg;
+    int send_index = 0;
+
+    while(!mShutdown) {
+
+        if(!mpTCPIPStack->Connection()) {
+
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            continue;
+        }
+
+        status_msg.set_id(15);
+        status_msg.set_status("Test message " + std::to_string(send_index++));
+        int size = message.mMsgPayload.size();
+        if(mpSerialise->Serialise(status_msg, message.mMsgPayload, size)) {
+
+            if(0 >= mpTCPIPStack->Send(message)) {
+
+                std::cerr << "[Client] Send failed" << std::endl;
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+}
+

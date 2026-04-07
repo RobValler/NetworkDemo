@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     std::signal(SIGINT, signal_handler);    // CTRL+C
     std::signal(SIGTERM, signal_handler);   // CTRL+Z
 
-    CTestClient client;
+    CTestClient client(argc, argv);
     client.Start();
     while(!gExitRequest) {
 
