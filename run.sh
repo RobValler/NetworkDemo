@@ -1,13 +1,19 @@
 #!/bin/bash
 
-cd build
-server/./network_demo_server &
-#client/./network_demo_client &
+cd build/Debug
+server/./server_demo &
 
-read -n 1 -s -r -p "Press any key to continue..."
+client/./client_demo "192.168.100.11" &
+#client/./client_demo "192.168.100.12" &
+#client/./client_demo "192.168.100.13" &
+#client/./client_demo "192.168.100.14" &
 
-killall -9 network_demo_server
-killall -9 network_demo_client
+read -n 1 -s -r -p "Press any key to continue...\n"
 
+killall -9 server_demo
+killall -9 client_demo
+
+ps -aux | grep client_demo
+ps -aux | grep server_demo
 cd ..
 

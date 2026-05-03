@@ -17,7 +17,7 @@
 #include "message_define.h"
 #include "testMsgPackage.pb.h"
 #include "serialise.h"
-//#include "encrypt.h"
+#include "encrypt_tls.h"
 
 #include <chrono>
 #include <iostream>
@@ -102,14 +102,16 @@ void CTestServer::Discovery_ThreadFunc() {
     SUDPParms udp_parms;
     udp_parms.portLocalID = 8001;
     udp_parms.portRemoteID = 8002;
-    udp_parms.broadCastSender = true;
-    udp_parms.localIpAddress = "192.168.100.11";
+    udp_parms.broadcaster = true;
     udp_parms.remoteIpAddress = "192.168.100.255";
     mpUDPStack->Start(udp_parms);
 
     // // Start the TCPIP server
     STCPIPServParms tcpip_parms;
     tcpip_parms.portID = 2001;
+    tcpip_parms.ipaddress = "192.168.100.11";
+    tcpip_parms.cert = "../../external/NetStack/cert/cert.pem";
+    tcpip_parms.pkey = "../../external/NetStack/cert/key.pem";
     mpTCPIPStack->Start(tcpip_parms);
 
 
@@ -118,7 +120,7 @@ void CTestServer::Discovery_ThreadFunc() {
         int size;
         if(!serialise.Serialise(send_message, msg.mMsgPayload, size)) {
 
-            std::cerr << "error: Serialise" << std::endl;
+            std::cerr << "error: server Serialise" << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(250));
             continue;
         }
@@ -128,7 +130,7 @@ void CTestServer::Discovery_ThreadFunc() {
             //std::cout << "[UDP] Sent OK" << std::endl;
         } else {
 
-            std::cerr << "error: Send" << std::endl;
+            std::cerr << "error: server Send" << std::endl;
         }
 
         std::this_thread::sleep_for(std::chrono::seconds(2));

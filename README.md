@@ -1,12 +1,12 @@
-#NetStack test application
+# NetStack test application
 Use-case for NetStack  
 
-#Setup
+## Setup
 include the support libs:  
 git submodule add git@github.com:RobValler/NetStack.git
 ./create.sh  
 
-##IP Addresses
+## IP Addresses
 ```
 sudo ip addr add 192.168.100.11/24 dev enp1s0
 sudo ip addr add 192.168.100.12/24 dev enp1s0

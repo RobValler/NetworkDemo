@@ -38,8 +38,8 @@ private:
     std::unique_ptr<CTCPIP_Client> mpTCPIPStack;
     std::unique_ptr<CSerial> mpSerialise;
 
-    bool mConnected{false};
-    std::string mTCPIPServerIP{""};
+    //bool mConnected{false};
+    //std::string mTCPIPServerIP{""};
     std::string mTCPIPLocalIP{""};
 
     int mArgc;

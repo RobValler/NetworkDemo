@@ -9,6 +9,8 @@
 
 #include "test_client.h"
 
+#include "logger.h"
+
 // protocol
 #include "udp_stack.h"
 #include "tcpip_client.h"
@@ -19,10 +21,6 @@
 #include "serialise.h"
 
 
-namespace {
-    const std::string gLocalIPAddress{"192.168.100.14"};
-}
-
 CTestClient::CTestClient(int argc, char *argv[])
     : mArgc(argc)
     , mArgv(argv)
@@ -32,6 +30,7 @@ CTestClient::CTestClient(int argc, char *argv[])
 {
     if(mArgc > 1) {
         mTCPIPLocalIP = argv[1];
+        CLogger::Print("Client : ipAddress = ", mTCPIPLocalIP);
     }
 }
 
@@ -108,14 +107,13 @@ void CTestClient::Discovery_ThreadFunc() {
     SUDPParms udp_parms;
     udp_parms.portLocalID = 8002;
     udp_parms.portRemoteID = 8001;
-    //udp_parms.localIpAddress = "192.168.100.15";
-    //udp_parms.remoteIpAddress = "192.168.100.14";
+    udp_parms.remoteIpAddress = "0.0.0.0";
     mpUDPStack->Start(udp_parms);
 
     while(!mShutdown) {
 
         if(0 >= mpUDPStack->Receive(msg)) {
-            std::cerr << "error: Receive" << std::endl;
+            std::cerr << "error: client Receive" << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
             continue;
         }
@@ -123,7 +121,7 @@ void CTestClient::Discovery_ThreadFunc() {
         int size = msg.mMsgPayload.size();
         if(!serialiser.Deserialise(msg.mMsgPayload, rec_message, size)) {
 
-            std::cerr << "error: Deserialise" << std::endl;
+            std::cerr << "error: client Deserialise" << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(1));
             continue;
         }
@@ -143,19 +141,24 @@ void CTestClient::Discovery_ThreadFunc() {
             std::string local_tcpip_server_IP = msg.mIpAddress;
 
             // connect to the tcpip server
-            if(mTCPIPServerIP != local_tcpip_server_IP) {
+            if(!mpTCPIPStack->Connection()) {
+//            if(mTCPIPServerIP != local_tcpip_server_IP) {
 
                 STCPIPClientParms tcpip_parms;
                 tcpip_parms.portID = 2001;
-                tcpip_parms.remoteIpAddress = local_tcpip_server_IP;
+                tcpip_parms.remoteIpAddress = msg.mIpAddress;
                 tcpip_parms.localIpAddress = mTCPIPLocalIP;
                 tcpip_parms.maxConnectRetryAttempts = 10;
+                tcpip_parms.cert = "../../external/NetStack/cert/cert.pem";
+                tcpip_parms.pkey = "../../external/NetStack/cert/key.pem";
                 if(1 == mpTCPIPStack->Start(tcpip_parms)) {
                     std::cerr << "error: tcpip_client start failed" << std::endl;
                 }
 
-                mTCPIPServerIP = local_tcpip_server_IP;
-                mConnected = true;
+                //mTCPIPServerIP = local_tcpip_server_IP;
+                //mConnected = true;
+            } else {
+
             }
         }
 
@@ -190,5 +193,6 @@ void CTestClient::Operational_ThreadFunc() {
         }
         std::this_thread::sleep_for(std::chrono::seconds(2));
     }
+    mpTCPIPStack->Stop();
 }
 

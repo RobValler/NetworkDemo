@@ -16,13 +16,16 @@ set (Wfloat-conversion)
 
 #PACKAGES
 find_package(Threads REQUIRED)
+find_package(OpenSSL 3.6.1 REQUIRED)
 find_package(protobuf 6.32.1 REQUIRED)
+find_package(logger 1.0.1 REQUIRED)
 
 #EXTERNAL INCLUDES
 include_directories(${ProtobufIncludePath})
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/common)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/serialise)
+include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/encrypt)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network/udp)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network/tcpip)
 
@@ -38,9 +41,16 @@ file(GLOB_RECURSE HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
 )
 
+file(GLOB APP_CONFIG
+    ${CMAKE_SOURCE_DIR}/README.md
+    ${CMAKE_SOURCE_DIR}/conanfile.py
+    ${CMAKE_SOURCE_DIR}/create.sh
+)
+
 add_executable(${PROJECT_NAME}
     ${SOURCES}
     ${HEADERS}
+    ${APP_CONFIG}
 )
 
 find_library(MY_NET_LIB NAMES net_stack PATHS ${CMAKE_SOURCE_DIR}/external/NetStack/build)
@@ -49,5 +59,7 @@ target_link_libraries(  ${PROJECT_NAME}
                         ${CMAKE_THREAD_LIBS_INIT}
                         protobuf::protobuf
                         messages
+                        OpenSSL::SSL
                         ${MY_NET_LIB}
+                        logger::logger
 )
