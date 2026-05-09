@@ -112,8 +112,8 @@ void CTestServer::Discovery_ThreadFunc() {
     STCPIPServParms tcpip_parms;
     tcpip_parms.portID = 2001;
     tcpip_parms.ipaddress = "192.168.100.11";
-    tcpip_parms.cert = "../../external/NetStack/cert/cert.pem";
-    tcpip_parms.pkey = "../../external/NetStack/cert/key.pem";
+    tcpip_parms.cert = "../external/NetStack/cert/cert.pem";
+    tcpip_parms.pkey = "../external/NetStack/cert/key.pem";
     mpTCPIPStack->Start(tcpip_parms);
 
 

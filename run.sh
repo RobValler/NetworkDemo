@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd build/Debug
+cd build
 
 echo -n "Press any key to continue..."
 

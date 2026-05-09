@@ -149,8 +149,8 @@ void CTestClient::Discovery_ThreadFunc() {
                 tcpip_parms.remoteIpAddress = rec_message.ipaddress();
                 tcpip_parms.localIpAddress = mTCPIPLocalIP;
                 tcpip_parms.maxConnectRetryAttempts = 10;
-                tcpip_parms.cert = "../../external/NetStack/cert/cert.pem";
-                tcpip_parms.pkey = "../../external/NetStack/cert/key.pem";
+                tcpip_parms.cert = "../external/NetStack/cert/cert.pem";
+                tcpip_parms.pkey = "../external/NetStack/cert/key.pem";
                 if(1 == mpTCPIPStack->Start(tcpip_parms)) {
                     std::cerr << "error: tcpip_client start failed" << std::endl;
                 }
