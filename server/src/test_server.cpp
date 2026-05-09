@@ -13,9 +13,11 @@
 #include "udp_stack.h"
 #include "tcpip_server.h"
 
+#include "logger.h"
+
 // messages - protobuff
 #include "message_define.h"
-#include "testMsgPackage.pb.h"
+#include "projectMsg.pb.h"
 #include "serialise.h"
 #include "encrypt_tls.h"
 
@@ -103,7 +105,7 @@ void CTestServer::Discovery_ThreadFunc() {
     udp_parms.portLocalID = 8001;
     udp_parms.portRemoteID = 8002;
     udp_parms.broadcaster = true;
-    udp_parms.remoteIpAddress = "192.168.100.255";
+    udp_parms.broadcastIpAddress = "192.168.100.255";
     mpUDPStack->Start(udp_parms);
 
     // // Start the TCPIP server
@@ -115,6 +117,8 @@ void CTestServer::Discovery_ThreadFunc() {
     mpTCPIPStack->Start(tcpip_parms);
 
 
+    send_message.set_port(tcpip_parms.portID);
+    send_message.set_ipaddress(tcpip_parms.ipaddress);
     while(!mShutdown) {
 
         int size;
@@ -125,7 +129,9 @@ void CTestServer::Discovery_ThreadFunc() {
             continue;
         }
 
-        if(0 < mpUDPStack->Send(msg)) {
+        auto send_size = mpUDPStack->Send(msg);
+        //CLogger::Log("mpUDPStack->Send : " + std::to_string(send_size));
+        if(0 < send_size) {
 
             //std::cout << "[UDP] Sent OK" << std::endl;
         } else {

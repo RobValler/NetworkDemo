@@ -17,7 +17,7 @@
 
 // messages - protobuff
 #include "message_define.h"
-#include "testMsgPackage.pb.h"
+#include "projectMsg.pb.h"
 #include "serialise.h"
 
 
@@ -107,12 +107,15 @@ void CTestClient::Discovery_ThreadFunc() {
     SUDPParms udp_parms;
     udp_parms.portLocalID = 8002;
     udp_parms.portRemoteID = 8001;
-    udp_parms.remoteIpAddress = "0.0.0.0";
+    udp_parms.broadcastIpAddress = "0.0.0.0";
     mpUDPStack->Start(udp_parms);
 
     while(!mShutdown) {
 
-        if(0 >= mpUDPStack->Receive(msg)) {
+        auto rec_size = mpUDPStack->Receive(msg);
+        //CLogger::Log("mpUDPStack->Receive : " + std::to_string(rec_size));
+
+        if(0 >= rec_size) {
             std::cerr << "error: client Receive" << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
             continue;
@@ -121,15 +124,15 @@ void CTestClient::Discovery_ThreadFunc() {
         int size = msg.mMsgPayload.size();
         if(!serialiser.Deserialise(msg.mMsgPayload, rec_message, size)) {
 
-            std::cerr << "error: client Deserialise" << std::endl;
+            std::cerr << "error: UDP Client Deserialise" << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(1));
             continue;
         }
 #if 0
         std::cout << "Client : received data from ("
-                  << msg.mIpAddress
+                  << rec_message.ipaddress()
                   << ":"
-                  << std::to_string(msg.mPort)
+                  << std::to_string(rec_message.port())
                   << ") - "
                   << rec_message.id()
                   << ", "
@@ -138,15 +141,12 @@ void CTestClient::Discovery_ThreadFunc() {
         // 10 is the discovery ID
         if(10 == rec_message.id()) {
 
-            std::string local_tcpip_server_IP = msg.mIpAddress;
-
             // connect to the tcpip server
             if(!mpTCPIPStack->Connection()) {
-//            if(mTCPIPServerIP != local_tcpip_server_IP) {
 
                 STCPIPClientParms tcpip_parms;
                 tcpip_parms.portID = 2001;
-                tcpip_parms.remoteIpAddress = msg.mIpAddress;
+                tcpip_parms.remoteIpAddress = rec_message.ipaddress();
                 tcpip_parms.localIpAddress = mTCPIPLocalIP;
                 tcpip_parms.maxConnectRetryAttempts = 10;
                 tcpip_parms.cert = "../../external/NetStack/cert/cert.pem";
@@ -154,14 +154,8 @@ void CTestClient::Discovery_ThreadFunc() {
                 if(1 == mpTCPIPStack->Start(tcpip_parms)) {
                     std::cerr << "error: tcpip_client start failed" << std::endl;
                 }
-
-                //mTCPIPServerIP = local_tcpip_server_IP;
-                //mConnected = true;
-            } else {
-
             }
         }
-
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     mpUDPStack->Stop();
@@ -182,7 +176,7 @@ void CTestClient::Operational_ThreadFunc() {
         }
 
         status_msg.set_id(15);
-        status_msg.set_status("Test message " + std::to_string(send_index++));
+        status_msg.set_status("This is a STATUS message from the client " + std::to_string(send_index++));
         int size = message.mMsgPayload.size();
         if(mpSerialise->Serialise(status_msg, message.mMsgPayload, size)) {
 

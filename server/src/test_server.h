@@ -25,9 +25,9 @@ public:
     void Start();
     void Stop();
     void Send();
-    void Receive();
 
 private:
+    void Receive();
     void Discovery_ThreadFunc();
     std::thread mtDiscovery;
     void Operational_ThreadFunc();

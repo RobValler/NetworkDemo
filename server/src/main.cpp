@@ -14,6 +14,7 @@
 #include <csignal>
 #include <iostream>
 
+
 namespace
 {
     std::atomic<bool> gExitRequest{false};

@@ -2,11 +2,16 @@
 #BUILD_TYPE=Release
 BUILD_TYPE=Debug
 
+cd messages
+./create_msg.sh
+cd ..
+
 echo "Build type $BUILD_TYPE"
 set -e
 rm -rf build || true
 mkdir build
 cd build
+
 conan install .. --build=missing --settings=build_type=$BUILD_TYPE
 cmake   -DCMAKE_TOOLCHAIN_FILE=$BUILD_TYPE/generators/conan_toolchain.cmake \
         -DCMAKE_BUILD_TYPE=$BUILD_TYPE \

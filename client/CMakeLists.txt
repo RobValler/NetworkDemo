@@ -22,9 +22,10 @@ find_package(logger 1.0.1 REQUIRED)
 
 #EXTERNAL INCLUDES
 include_directories(${ProtobufIncludePath})
+include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/common)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/serialise)
-include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network)
+include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/encrypt)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network/udp)
 include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network/tcpip)
 
