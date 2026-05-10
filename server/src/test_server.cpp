@@ -22,7 +22,6 @@
 #include "encrypt_tls.h"
 
 #include <chrono>
-#include <iostream>
 
 CTestServer::CTestServer()
     : mpUDPStack(std::make_unique<CUDP_Stack>())
@@ -61,7 +60,7 @@ void CTestServer::Send() {
     int size;
     if(!mpSerialise->Serialise(command_msg, message.mMsgPayload, size)) {
 
-        std::cerr << "error: Serialise" << std::endl;
+        CLogger::Err("Serialise error");
         return;
     }
 
@@ -78,17 +77,17 @@ void CTestServer::Receive() {
     StatusMsg status_msg;
     message::SMessage message;
     if(0 >= mpTCPIPStack->Receive(message)) {
-        std::cerr << "error: server receive" << std::endl;
+        CLogger::Err("error: server receive");
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
         return;
     }
 
     int size = message.mMsgPayload.size();
     if(!mpSerialise->Deserialise(message.mMsgPayload, status_msg, size)) {
-        std::cerr << "error: Deserialise" << std::endl;
+        CLogger::Err("error: Deserialise");
     }
 
-    std::cout << "Server receive: " << status_msg.status() << std::endl;
+    CLogger::Log("Server receive: " + status_msg.status());
 }
 
 void CTestServer::Discovery_ThreadFunc() {
@@ -108,14 +107,13 @@ void CTestServer::Discovery_ThreadFunc() {
     udp_parms.broadcastIpAddress = "192.168.100.255";
     mpUDPStack->Start(udp_parms);
 
-    // // Start the TCPIP server
+    // Start the TCPIP server
     STCPIPServParms tcpip_parms;
     tcpip_parms.portID = 2001;
     tcpip_parms.ipaddress = "192.168.100.11";
     tcpip_parms.cert = "../external/NetStack/cert/cert.pem";
     tcpip_parms.pkey = "../external/NetStack/cert/key.pem";
     mpTCPIPStack->Start(tcpip_parms);
-
 
     send_message.set_port(tcpip_parms.portID);
     send_message.set_ipaddress(tcpip_parms.ipaddress);
@@ -124,7 +122,7 @@ void CTestServer::Discovery_ThreadFunc() {
         int size;
         if(!serialise.Serialise(send_message, msg.mMsgPayload, size)) {
 
-            std::cerr << "error: server Serialise" << std::endl;
+            CLogger::Err("error: server Serialise");
             std::this_thread::sleep_for(std::chrono::milliseconds(250));
             continue;
         }
@@ -133,10 +131,10 @@ void CTestServer::Discovery_ThreadFunc() {
         //CLogger::Log("mpUDPStack->Send : " + std::to_string(send_size));
         if(0 < send_size) {
 
-            //std::cout << "[UDP] Sent OK" << std::endl;
+            //CLogger::Err("[UDP] Sent OK");
         } else {
 
-            std::cerr << "error: server Send" << std::endl;
+            CLogger::Err("error: server Send");
         }
 
         std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -158,22 +156,29 @@ void CTestServer::Operational_ThreadFunc() {
             continue;
         }
 
-        auto bytes_rec = mpTCPIPStack->Receive(message);
-        if(bytes_rec > 0) {
+        while(true) {
+            mpTCPIPStack->Receive(message);
 
-            int size = message.mMsgPayload.size();
-            if(mpSerialise->Deserialise(message.mMsgPayload, status_msg, size)) {
+            for(const auto& it_msg : message.mMsgPayloadList) {
 
-                switch(status_msg.id()) {
-                    case 15: {
-                        std::cout << "[Server] " << status_msg.status() << std::endl;
-                        break;
+                if(it_msg.body_size > 0) {
+
+                    int size = message.mMsgPayload.size();
+                    if(mpSerialise->Deserialise(it_msg.mMsgPayload, status_msg, size)) {
+
+                        switch(status_msg.id()) {
+                        case 15: {
+
+                            CLogger::Log("[Server] " + status_msg.status());
+                            break;
+                        }
+                        default:
+                            break;
+                        }
                     }
-                    default:
-                        break;
-                }
-            }
-        }
+                } // if
+            } // for
+        } // while
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 }

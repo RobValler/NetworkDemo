@@ -107,6 +107,7 @@ void CTestClient::Discovery_ThreadFunc() {
     SUDPParms udp_parms;
     udp_parms.portLocalID = 8002;
     udp_parms.portRemoteID = 8001;
+
     udp_parms.broadcastIpAddress = "0.0.0.0";
     mpUDPStack->Start(udp_parms);
 
@@ -116,7 +117,7 @@ void CTestClient::Discovery_ThreadFunc() {
         //CLogger::Log("mpUDPStack->Receive : " + std::to_string(rec_size));
 
         if(0 >= rec_size) {
-            std::cerr << "error: client Receive" << std::endl;
+            CLogger::Err("Client " + mTCPIPLocalIP + " receive error");
             std::this_thread::sleep_for(std::chrono::milliseconds(200));
             continue;
         }
@@ -124,7 +125,7 @@ void CTestClient::Discovery_ThreadFunc() {
         int size = msg.mMsgPayload.size();
         if(!serialiser.Deserialise(msg.mMsgPayload, rec_message, size)) {
 
-            std::cerr << "error: UDP Client Deserialise" << std::endl;
+            CLogger::Err("Client " + mTCPIPLocalIP + " Deserialise error");
             std::this_thread::sleep_for(std::chrono::seconds(1));
             continue;
         }
@@ -176,7 +177,7 @@ void CTestClient::Operational_ThreadFunc() {
         }
 
         status_msg.set_id(15);
-        status_msg.set_status("This is a STATUS message from the client " + std::to_string(send_index++));
+        status_msg.set_status("This is a STATUS message from Client " + mTCPIPLocalIP + " : Index = " + std::to_string(send_index++));
         int size = message.mMsgPayload.size();
         if(mpSerialise->Serialise(status_msg, message.mMsgPayload, size)) {
 
