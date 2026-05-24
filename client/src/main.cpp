@@ -36,7 +36,6 @@ int main(int argc, char *argv[]) {
     client.Start();
     while(!gExitRequest) {
 
-        client.Receive();
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     client.Stop();
