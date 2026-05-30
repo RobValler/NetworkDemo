@@ -1,0 +1,16 @@
+FROM docker.io/library/debian:stable-slim
+
+WORKDIR /app
+
+COPY b/client/client_demo /app/client_demo
+
+RUN chmod +x /app/client_demo
+
+ENV APP_IP=0.0.0.0
+ENV TCP_PORT=4000
+ENV UDP_PORT=5000
+
+EXPOSE 4000/tcp
+EXPOSE 5000/udp
+
+CMD ["/app/client_demo"]

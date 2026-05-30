@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  server_demo:
+    build:
+      context: ./server
+    container_name: server_demo
+    ports:
+      - "4001:4001/tcp"
+      - "5001:5001/udp"
+    restart: unless-stopped
+
+  client_demo:
+    build:
+      context: ./client
+    container_name: client_demo
+    depends_on:
+      - server_demo
+    command: ["/app/client_demo", "192.168.100.12"]
+    ports:
+      - "4000:4000/tcp"
+      - "5000:5000/udp"
+    restart: unless-stopped
