@@ -19,18 +19,14 @@ find_package(Threads REQUIRED)
 find_package(OpenSSL 3.6.1 REQUIRED)
 find_package(protobuf 6.32.1 REQUIRED)
 find_package(logger 1.0.1 REQUIRED)
+find_package(netstack 1.0.0 REQUIRED)
 
 #EXTERNAL INCLUDES
 include_directories(${ProtobufIncludePath})
-include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network)
-include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/common)
-include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/serialise)
-include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/encrypt)
-include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network/udp)
-include_directories(${CMAKE_SOURCE_DIR}/external/NetStack/src/network/tcpip)
 
 #INCLUDES
 include_directories(${CMAKE_SOURCE_DIR}/messages/src)
+include_directories(${CMAKE_SOURCE_DIR}/src)
 
 #SOURCE FILES
 file(GLOB_RECURSE SOURCES
@@ -54,13 +50,16 @@ add_executable(${PROJECT_NAME}
     ${APP_CONFIG}
 )
 
-find_library(MY_NET_LIB NAMES net_stack PATHS ${CMAKE_SOURCE_DIR}/external/NetStack/build)
-
 target_link_libraries(  ${PROJECT_NAME}
                         ${CMAKE_THREAD_LIBS_INIT}
                         protobuf::protobuf
                         messages
                         OpenSSL::SSL
-                        ${MY_NET_LIB}
                         logger::logger
+                        netstack::netstack
+)
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
+    $<$<CXX_COMPILER_ID:MSVC>:/W4>
 )

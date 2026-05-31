@@ -7,7 +7,8 @@
  * without the express permission of the copyright holder
  *****************************************************************/
 
-#pragma (once)
+#ifndef TEST_CLIENT__H
+#define TEST_CLIENT__H
 
 #include <memory>
 #include <thread>
@@ -34,6 +35,9 @@ private:
     std::thread mtOperational;
     std::atomic<bool> mShutdown{false};
 
+    int mArgc;
+    char **mArgv;
+
     std::unique_ptr<CUDP_Stack> mpUDPStack;
     std::unique_ptr<CTCPIP_Client> mpTCPIPStack;
     std::unique_ptr<CSerial> mpSerialise;
@@ -42,6 +46,6 @@ private:
     //std::string mTCPIPServerIP{""};
     std::string mTCPIPLocalIP{""};
 
-    int mArgc;
-    char **mArgv;
 };
+
+#endif // TEST_CLIENT__H

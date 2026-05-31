@@ -7,7 +7,8 @@
  * without the express permission of the copyright holder
  *****************************************************************/
 
-#pragma (once)
+#ifndef TEST_SERVER__H
+#define TEST_SERVER__H
 
 #include <memory>
 #include <thread>
@@ -39,3 +40,5 @@ private:
     std::unique_ptr<CSerial> mpSerialise;
 
 };
+
+#endif // TEST_SERVER__H

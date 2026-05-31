@@ -1,6 +1,0 @@
-[submodule "NetStack"]
-	path = NetStack
-	url = git@github.com:RobValler/NetStack.git
-[submodule "external/NetStack"]
-	path = external/NetStack
-	url = git@github.com:RobValler/NetStack.git
