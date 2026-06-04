@@ -8,7 +8,7 @@
 # *****************************************************************/
 
 from conan import ConanFile
-from conan.tools.cmake import CMakeDeps, CMakeToolchain, cmake_layout
+from conan.tools.cmake import cmake_layout
 
 class CommsStackRecipe(ConanFile):
     name = "network_demo"

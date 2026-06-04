@@ -26,7 +26,7 @@ void signal_handler(int signal)
     gExitRequest = true;
 }
 
-int main(int argc, char *argv[]) {
+int main() {
 
     // POSIIX signal handling
     std::signal(SIGINT, signal_handler);    // CTRL+C
