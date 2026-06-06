@@ -55,8 +55,8 @@ target_link_libraries(  ${PROJECT_NAME}
                         protobuf::protobuf
                         messages
                         OpenSSL::SSL
-                        logger::logger
-                        netstack::netstack
+                        devfw::logger
+                        devfw::netstack
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
