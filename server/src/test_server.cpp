@@ -101,15 +101,15 @@ void CTestServer::Discovery_ThreadFunc() {
 
     // Start the UDP
     SUDPParms udp_parms;
-    udp_parms.portLocalID = 8001;
-    udp_parms.portRemoteID = 8002;
+    udp_parms.portLocalID = 12345;
+    udp_parms.portRemoteID = 12346;
     udp_parms.broadcaster = true;
     udp_parms.broadcastIpAddress = "192.168.0.255";
     mpUDPStack->Start(udp_parms);
 
     // Start the TCPIP server
     STCPIPServParms tcpip_parms;
-    tcpip_parms.portID = 2001;
+    tcpip_parms.portID = 12347;
     tcpip_parms.ipaddress = "192.168.0.10";
     tcpip_parms.cert = "../cert/cert.pem";
     tcpip_parms.pkey = "../cert/key.pem";

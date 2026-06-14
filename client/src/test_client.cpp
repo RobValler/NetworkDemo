@@ -105,8 +105,8 @@ void CTestClient::Discovery_ThreadFunc() {
 
     // Start the UDP
     SUDPParms udp_parms;
-    udp_parms.portLocalID = 8002;
-    udp_parms.portRemoteID = 8001;
+    udp_parms.portLocalID = 12346;
+    udp_parms.portRemoteID = 12345;
 
     udp_parms.broadcastIpAddress = "0.0.0.0";
     mpUDPStack->Start(udp_parms);
@@ -146,7 +146,7 @@ void CTestClient::Discovery_ThreadFunc() {
             if(!mpTCPIPStack->Connection()) {
 
                 STCPIPClientParms tcpip_parms;
-                tcpip_parms.portID = 2001;
+                tcpip_parms.portID = 12347;
                 tcpip_parms.remoteIpAddress = rec_message.ipaddress();
                 tcpip_parms.localIpAddress = mTCPIPLocalIP;
                 tcpip_parms.maxConnectRetryAttempts = 10;
